@@ -1,6 +1,6 @@
 {
-  "version": "1.0.1",
-  "changelog": "优化项目文件结构。",
-  "releaseDate": "2025-11-13",
+  "version": "1.0.2",
+  "changelog": "BUG修复。",
+  "releaseDate": "2025-11-18",
   "downloadUrl": "https://github.com/Diorser/LiteMonitor/releases"
 }

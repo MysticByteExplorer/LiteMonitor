@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+
+		<!-- Updater 应该是一个完全独立可执行程序 -->
+		<SelfContained>true</SelfContained>
+		<PublishSingleFile>true</PublishSingleFile>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+		<PublishTrimmed>false</PublishTrimmed>
+		<DebugType>none</DebugType>
+		<DebugSymbols>false</DebugSymbols>
+
+		<!-- 最重要：生成 Updater.exe 而不是 LiteMonitor.Updater.exe -->
+		<AssemblyName>Updater</AssemblyName>
+
+		<!-- 禁用顶级语句 -->
+		<UseMaui>false</UseMaui>
+
+		<!-- 指定 Main 入口 -->
+		<StartupObject>LiteMonitor.Updater.Program</StartupObject>
+	</PropertyGroup>
+</Project>

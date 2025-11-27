@@ -225,10 +225,14 @@ namespace LiteMonitor
         // ========== 构造函数 ==========
         public MainForm()
         {
-            // === 自动检测系统语言 ===
-            string sysLang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.ToLower();
-            string langPath = Path.Combine(AppContext.BaseDirectory, "resources/lang", $"{sysLang}.json");
-            _cfg.Language = File.Exists(langPath) ? sysLang : "en";
+            // 如果用户未设置过语言（首次启动），则使用系统默认语言
+            if (string.IsNullOrEmpty(_cfg.Language))
+            {
+                // === 自动检测系统语言 ===
+                string sysLang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.ToLower();
+                string langPath = Path.Combine(AppContext.BaseDirectory, "resources/lang", $"{sysLang}.json");
+                _cfg.Language = File.Exists(langPath) ? sysLang : "en";
+            }
 
             FormBorderStyle = FormBorderStyle.None;
             ShowInTaskbar = false;
@@ -428,6 +432,8 @@ namespace LiteMonitor
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
+            // ★★★ [新增] 检查更新成功标志 ★★★
+            CheckUpdateSuccess();
 
             // === 是否隐藏主窗口 ===
             if (_cfg.HideMainForm)
@@ -505,6 +511,24 @@ namespace LiteMonitor
             _ = UpdateChecker.CheckAsync();
         }
 
+        // [新增] 检查并提示更新成功
+        private void CheckUpdateSuccess()
+        {
+            string tokenPath = Path.Combine(AppContext.BaseDirectory, "update_success");
+
+            if (File.Exists(tokenPath))
+            {
+                // 1. 尝试删除标志文件（防止下次启动重复提示）
+                try { File.Delete(tokenPath); } catch { }
+
+                // 2. 方式 A：弹出气泡提示（推荐，不打扰）
+                // 如果你的托盘图标对象叫 _tray
+                _tray.ShowBalloonTip(3000, "LiteMonitor", "🎉 软件已成功更新到最新版本！", ToolTipIcon.Info);
+
+                // 2. 方式 B：或者弹窗提示（如果你喜欢强提醒）
+                // MessageBox.Show("软件已成功更新到最新版本！", "更新成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
 
         
         /// <summary>

@@ -20,7 +20,7 @@ namespace LiteMonitor
         // ====== 新增：用户偏好（从主题里迁移出来的 & 新功能需要） ======
         public bool HorizontalMode { get; set; } = false;
         public double Opacity { get; set; } = 0.85;   // ← 窗口透明度（原 theme.window.opacity）
-        public string Language { get; set; } = "zh";  // ← 语言：zh / en（对应 zh.json / en.json）
+        public string Language { get; set; } = "";  // ← 语言：zh / en（对应 zh.json / en.json），空字符串表示首次启动
         public bool ClickThrough { get; set; } = false; // ← 鼠标穿透
         public bool AutoHide { get; set; } = true;     // ← 靠边自动隐藏                     
         public bool ClampToScreen { get; set; } = false; // ★限制窗口不能拖出屏幕边界

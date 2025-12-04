@@ -149,8 +149,7 @@ namespace LiteMonitor
     {
         // 1. 通用负载/内存/显存/频率/功耗 (CPU Load, Temp, Mem Load, etc.)
         public ValueRange Load { get; set; } = new ValueRange { Warn = 60, Crit = 85 };
-        public ValueRange Temp { get; set; } = new ValueRange { Warn = 60, Crit = 85 }; // 报警温度 80°C
-        //public ValueRange Adaptive { get; set; } = new ValueRange { Warn = 60, Crit = 85 }; //智能计算
+        public ValueRange Temp { get; set; } = new ValueRange { Warn = 50, Crit = 70 }; // 报警温度 50°C - 70°C
 
         // 2. 磁盘 (Disk R/W 共享阈值，单位 MB/s)
         public ValueRange DiskIOMB { get; set; } = new ValueRange { Warn = 2, Crit = 8 }; // 10MB/s and 50MB/s

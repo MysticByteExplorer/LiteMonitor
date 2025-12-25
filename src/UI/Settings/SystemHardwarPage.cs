@@ -9,32 +9,28 @@ using LiteMonitor.src.UI.Controls;
 
 namespace LiteMonitor.src.UI.SettingsPage
 {
-    public class GeneralPage : SettingsPageBase
+    public class SystemHardwarPage : SettingsPageBase
     {
         private Panel _container;
         private bool _isLoaded = false;
 
         private LiteComboBox _cmbLang;
         private LiteCheck _chkAutoStart;
-        private LiteCheck _chkTopMost;
-        private LiteComboBox _cmbRefresh;
-        private LiteCheck _chkAutoHide;
-        private LiteCheck _chkClickThrough;
-        private LiteCheck _chkClamp;
         private LiteCheck _chkHideTray;
-        private LiteCheck _chkHideMain;
-        private LiteCheck _chkShowTaskbar;
+        
+        private LiteComboBox _cmbRefresh;
         private LiteComboBox _cmbNet;
         private LiteComboBox _cmbDisk;
-        private string _originalLanguage;
 
-        // 最大限制
+        // 最大限制校准
         private LiteUnderlineInput _txtMaxCpuPower;
         private LiteUnderlineInput _txtMaxCpuClock;
         private LiteUnderlineInput _txtMaxGpuPower;
         private LiteUnderlineInput _txtMaxGpuClock;
 
-        public GeneralPage()
+        private string _originalLanguage;
+
+        public SystemHardwarPage()
         {
             this.BackColor = UIColors.MainBg;
             this.Dock = DockStyle.Fill;
@@ -49,8 +45,8 @@ namespace LiteMonitor.src.UI.SettingsPage
             _container.SuspendLayout();
             _container.Controls.Clear();
            
-            CreateBehaviorCard(); 
             CreateSystemCard();   
+            CreateCalibrationCard();
             CreateSourceCard();   
 
             _originalLanguage = Config.Language;
@@ -58,33 +54,11 @@ namespace LiteMonitor.src.UI.SettingsPage
             _isLoaded = true;
         }
 
-        // ... CreateBehaviorCard 和 CreateSystemCard 保持不变 (代码省略以节省篇幅) ...
-        private void CreateBehaviorCard()
-        {
-            var group = new LiteSettingsGroup(LanguageManager.T("Menu.Behavior"));
-            _chkTopMost = new LiteCheck(Config.TopMost, LanguageManager.T("Menu.Enable"));
-            group.AddItem(new LiteSettingsItem(LanguageManager.T("Menu.TopMost"), _chkTopMost));
-            _chkClickThrough = new LiteCheck(Config.ClickThrough, LanguageManager.T("Menu.Enable"));
-            group.AddItem(new LiteSettingsItem(LanguageManager.T("Menu.ClickThrough"), _chkClickThrough));
-            _chkClamp = new LiteCheck(Config.ClampToScreen, LanguageManager.T("Menu.Enable"));
-            group.AddItem(new LiteSettingsItem(LanguageManager.T("Menu.ClampToScreen"), _chkClamp));
-            _chkAutoHide = new LiteCheck(Config.AutoHide, LanguageManager.T("Menu.Enable"));
-            group.AddItem(new LiteSettingsItem(LanguageManager.T("Menu.AutoHide"), _chkAutoHide));
-            _chkHideTray = new LiteCheck(Config.HideTrayIcon, LanguageManager.T("Menu.Enable"));
-            group.AddItem(new LiteSettingsItem(LanguageManager.T("Menu.HideTrayIcon"), _chkHideTray));
-            _chkHideMain = new LiteCheck(Config.HideMainForm, LanguageManager.T("Menu.Enable"));
-            group.AddItem(new LiteSettingsItem(LanguageManager.T("Menu.HideMainForm"), _chkHideMain));
-            _chkShowTaskbar = new LiteCheck(Config.ShowTaskbar, LanguageManager.T("Menu.Enable"));
-            group.AddItem(new LiteSettingsItem(LanguageManager.T("Menu.TaskbarShow"), _chkShowTaskbar));
-            _chkHideTray.CheckedChanged += (s, e) => CheckVisibilitySafe();
-            _chkHideMain.CheckedChanged += (s, e) => CheckVisibilitySafe();
-            _chkShowTaskbar.CheckedChanged += (s, e) => CheckVisibilitySafe();
-            AddGroupToPage(group);
-        }
-        
         private void CreateSystemCard()
         {
             var group = new LiteSettingsGroup(LanguageManager.T("Menu.SystemSettings"));
+            
+            // 语言
             _cmbLang = new LiteComboBox();
             string langDir = Path.Combine(AppContext.BaseDirectory, "resources/lang");
             if (Directory.Exists(langDir)) {
@@ -98,53 +72,71 @@ namespace LiteMonitor.src.UI.SettingsPage
                 if (item.ToString().Contains(curLang.ToUpper())) _cmbLang.SelectedItem = item;
             }
             group.AddItem(new LiteSettingsItem(LanguageManager.T("Menu.Language"), _cmbLang));
+
+            // 开机自启
             _chkAutoStart = new LiteCheck(Config.AutoStart, LanguageManager.T("Menu.Enable"));
             group.AddItem(new LiteSettingsItem(LanguageManager.T("Menu.AutoStart"), _chkAutoStart));
+
+            // 隐藏托盘图标
+            _chkHideTray = new LiteCheck(Config.HideTrayIcon, LanguageManager.T("Menu.Enable"));
+            group.AddItem(new LiteSettingsItem(LanguageManager.T("Menu.HideTrayIcon"), _chkHideTray));
+            
+            // 安全检查事件
+            _chkHideTray.CheckedChanged += (s, e) => CheckVisibilitySafe();
+
             AddGroupToPage(group);
         }
+
+        
+        private void CreateCalibrationCard()
+        {
+            // 将原来的 "Max Limits" 独立显示，逻辑更清晰
+            var group = new LiteSettingsGroup(LanguageManager.T("Menu.Calibration"));
+
+            _txtMaxCpuPower = new LiteUnderlineInput(Config.RecordedMaxCpuPower.ToString("F0"), "W", "", 50);
+            group.AddItem(new LiteSettingsItem(LanguageManager.T("Items.CPU.Power") + " (" + LanguageManager.T("Menu.MaxLimits") + ")", _txtMaxCpuPower));
+
+            _txtMaxCpuClock = new LiteUnderlineInput(Config.RecordedMaxCpuClock.ToString("F0"), "MHz", "", 70);
+            group.AddItem(new LiteSettingsItem(LanguageManager.T("Items.CPU.Clock") + " (" + LanguageManager.T("Menu.MaxLimits") + ")", _txtMaxCpuClock));
+
+            _txtMaxGpuPower = new LiteUnderlineInput(Config.RecordedMaxGpuPower.ToString("F0"), "W", "", 50);
+            group.AddItem(new LiteSettingsItem(LanguageManager.T("Items.GPU.Power") + " (" + LanguageManager.T("Menu.MaxLimits") + ")", _txtMaxGpuPower));
+
+            _txtMaxGpuClock = new LiteUnderlineInput(Config.RecordedMaxGpuClock.ToString("F0"), "MHz", "", 70);
+            group.AddItem(new LiteSettingsItem(LanguageManager.T("Items.GPU.Clock") + " (" + LanguageManager.T("Menu.MaxLimits") + ")", _txtMaxGpuClock));
+
+            group.AddFullItem(new LiteNote(LanguageManager.T("Menu.CalibrationTip"), 0));
+
+            AddGroupToPage(group);
+        }
+
 
         private void CreateSourceCard()
         {
             var group = new LiteSettingsGroup(LanguageManager.T("Menu.HardwareSettings"));
 
-             // Max Limits
-            group.AddFullItem(new LiteNote("Max Limits (For Graph Scaling)", 0));
-
-            // ★ 适配新构造函数：text, unit, suffix="", width=80
-            _txtMaxCpuPower = new LiteUnderlineInput(Config.RecordedMaxCpuPower.ToString("F0"), "W", "", 80);
-            group.AddItem(new LiteSettingsItem("CPU Max Power", _txtMaxCpuPower));
-
-            _txtMaxCpuClock = new LiteUnderlineInput(Config.RecordedMaxCpuClock.ToString("F0"), "MHz", "", 80);
-            group.AddItem(new LiteSettingsItem("CPU Max Clock", _txtMaxCpuClock));
-
-            _txtMaxGpuPower = new LiteUnderlineInput(Config.RecordedMaxGpuPower.ToString("F0"), "W", "", 80);
-            group.AddItem(new LiteSettingsItem("GPU Max Power", _txtMaxGpuPower));
-
-            _txtMaxGpuClock = new LiteUnderlineInput(Config.RecordedMaxGpuClock.ToString("F0"), "MHz", "", 80);
-            group.AddItem(new LiteSettingsItem("GPU Max Clock", _txtMaxGpuClock));
-            
+            // 磁盘源
             _cmbDisk = new LiteComboBox();
             foreach (var d in HardwareMonitor.ListAllDisks()) _cmbDisk.Items.Add(d);
             SetComboVal(_cmbDisk, string.IsNullOrEmpty(Config.PreferredDisk) ? LanguageManager.T("Menu.Auto") : Config.PreferredDisk);
             group.AddItem(new LiteSettingsItem(LanguageManager.T("Menu.DiskSource"), _cmbDisk));
 
+            // 网络源
             _cmbNet = new LiteComboBox();
             foreach (var n in HardwareMonitor.ListAllNetworks()) _cmbNet.Items.Add(n);
             SetComboVal(_cmbNet, string.IsNullOrEmpty(Config.PreferredNetwork) ? LanguageManager.T("Menu.Auto") : Config.PreferredNetwork);
             group.AddItem(new LiteSettingsItem(LanguageManager.T("Menu.NetworkSource"), _cmbNet));
 
+            // 刷新率
             _cmbRefresh = new LiteComboBox();
             int[] rates = { 100, 200, 300, 500, 600, 700, 800, 1000, 1500, 2000, 3000 };
             foreach (var r in rates) _cmbRefresh.Items.Add(r + " ms");
             SetComboVal(_cmbRefresh, Config.RefreshMs + " ms");
             group.AddItem(new LiteSettingsItem(LanguageManager.T("Menu.Refresh"), _cmbRefresh));
 
-           
-
             AddGroupToPage(group);
         }
 
-        // ... 辅助方法保持不变 (AddGroupToPage, Save 等) ...
         private void AddGroupToPage(LiteSettingsGroup group)
         {
             var wrapper = new Panel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(0, 0, 0, 20) };
@@ -152,13 +144,19 @@ namespace LiteMonitor.src.UI.SettingsPage
             _container.Controls.Add(wrapper);
             _container.Controls.SetChildIndex(wrapper, 0);
         }
+        
         private void SetComboVal(LiteComboBox cmb, string val) { if (!cmb.Items.Contains(val)) cmb.Items.Insert(0, val); cmb.SelectedItem = val; }
+        
+        // 安全检查：防止所有入口都被隐藏
         private void CheckVisibilitySafe() {
-            if (!_chkShowTaskbar.Checked && _chkHideMain.Checked && _chkHideTray.Checked) {
-                if (_chkHideMain.Focused) _chkHideMain.Checked = false;
-                else _chkHideTray.Checked = false;
+            if (!Config.ShowTaskbar && Config.HideMainForm && _chkHideTray.Checked) {
+                MessageBox.Show("为了防止程序无法唤出，不能同时隐藏 [主界面]、[托盘图标] 和 [任务栏]。", 
+                                "安全警告", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+                _chkHideTray.Checked = false;
             }
         }
+        
         private int ParseInt(string s) { string clean = new string(s.Where(char.IsDigit).ToArray()); return int.TryParse(clean, out int v) ? v : 0; }
         private float ParseFloat(string s) { string clean = new string(s.Where(c => char.IsDigit(c) || c == '.').ToArray()); return float.TryParse(clean, out float v) ? v : 0f; }
 
@@ -167,19 +165,17 @@ namespace LiteMonitor.src.UI.SettingsPage
             if (!_isLoaded) return;
             
             Config.AutoStart = _chkAutoStart.Checked;
-            Config.TopMost = _chkTopMost.Checked;
+            
             if (_cmbLang.SelectedItem != null) {
                 string s = _cmbLang.SelectedItem.ToString();
                 Config.Language = (s == "Auto") ? "" : s.Split('(')[0].Trim().ToLower();
             }
-            Config.AutoHide = _chkAutoHide.Checked;
-            Config.ClickThrough = _chkClickThrough.Checked;
-            Config.ClampToScreen = _chkClamp.Checked;
+            
             Config.HideTrayIcon = _chkHideTray.Checked;
-            Config.HideMainForm = _chkHideMain.Checked;
-            Config.ShowTaskbar = _chkShowTaskbar.Checked;
+            
             Config.RefreshMs = ParseInt(_cmbRefresh.Text);
             if (Config.RefreshMs < 50) Config.RefreshMs = 1000;
+            
             if (_cmbDisk.SelectedItem != null) { string d = _cmbDisk.SelectedItem.ToString(); Config.PreferredDisk = (d == "Auto") ? "" : d; }
             if (_cmbNet.SelectedItem != null) { string n = _cmbNet.SelectedItem.ToString(); Config.PreferredNetwork = (n == "Auto") ? "" : n; }
 
@@ -188,10 +184,10 @@ namespace LiteMonitor.src.UI.SettingsPage
             Config.RecordedMaxGpuPower = ParseFloat(_txtMaxGpuPower.Inner.Text);
             Config.RecordedMaxGpuClock = ParseFloat(_txtMaxGpuClock.Inner.Text);
 
+            // 应用更改
             AppActions.ApplyAutoStart(Config);
-            AppActions.ApplyWindowAttributes(Config, this.MainForm); 
             AppActions.ApplyVisibility(Config, this.MainForm);
-            AppActions.ApplyMonitorLayout(this.UI, this.MainForm);
+            
             if (_originalLanguage != Config.Language) {
                 AppActions.ApplyLanguage(Config, this.UI, this.MainForm);
                 _originalLanguage = Config.Language; 

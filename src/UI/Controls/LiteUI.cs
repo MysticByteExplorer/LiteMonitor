@@ -128,7 +128,7 @@ namespace LiteMonitor.src.UI.Controls
         private Label _lblUnit;   // 单位 (右侧)
         private Label _lblLabel;  // 标签 (左侧)
 
-        public LiteUnderlineInput(string text, string unit = "", string labelPrefix = "", int width = 160, Color? labelColor = null,HorizontalAlignment align = HorizontalAlignment.Left) // ★ 新增参数)
+        public LiteUnderlineInput(string text, string unit = "", string labelPrefix = "", int width = 160, Color? fontColor = null,HorizontalAlignment align = HorizontalAlignment.Left) // ★ 新增参数)
         {
             this.Size = new Size(width, 26); // ★ 增加高度到 28 (原26)，防止文字裁切
             this.BackColor = Color.Transparent;
@@ -146,7 +146,7 @@ namespace LiteMonitor.src.UI.Controls
                 Dock = DockStyle.Fill,
                 BackColor = Color.White,
                 Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Regular),
-                ForeColor = UIColors.TextMain,
+                ForeColor = fontColor ?? UIColors.TextSub,
                 // ★★★ 只需增加这一行 ★★★
                 TextAlign = align // ★ 修改这里：赋值为传入的参数
             };
@@ -176,7 +176,7 @@ namespace LiteMonitor.src.UI.Controls
                     AutoSize = true, 
                     Dock = DockStyle.Left,
                     Font = new Font("Microsoft YaHei UI", 9F), 
-                    ForeColor = labelColor ?? Color.Gray, 
+                    ForeColor = fontColor ?? UIColors.TextSub,
                     TextAlign = ContentAlignment.BottomLeft, 
                     Padding = new Padding(0, 0, 4, 3) 
                 };
@@ -216,13 +216,12 @@ namespace LiteMonitor.src.UI.Controls
 
         public LiteColorInput(string initialHex)
         {
-            this.Size = new Size(110, 26); 
+            this.Size = new Size(95, 26); 
             Picker = new LiteColorPicker(initialHex) { Size = new Size(26, 22), Location = new Point(this.Width - 26, 3) };
             
             // 适配新构造函数
-            Input = new LiteUnderlineInput(initialHex, "", "", 75) { Location = new Point(0, 0) };
+            Input = new LiteUnderlineInput(initialHex, "", "", 60) { Location = new Point(0, 0) };
             
-            Input.SetTextColor(UIColors.TextSub); 
             Picker.ColorChanged += (s, e) => Input.Inner.Text = $"#{Picker.Value.R:X2}{Picker.Value.G:X2}{Picker.Value.B:X2}";
             Input.Inner.TextChanged += (s, e) => Picker.SetHex(Input.Inner.Text);
             this.Controls.Add(Input);

@@ -20,6 +20,9 @@ namespace LiteMonitor.src.UI.SettingsPage
         private ThresholdInputs _inNetDown;
         private ThresholdInputs _inDataUp;
         private ThresholdInputs _inDataDown;
+        // ★★★ 新增：弹窗告警设置 ★★★
+        private LiteCheck _chkAlertTemp;
+        private LiteUnderlineInput _inAlertTemp;
 
         public ThresholdPage()
         {
@@ -36,32 +39,46 @@ namespace LiteMonitor.src.UI.SettingsPage
             _container.SuspendLayout();
             _container.Controls.Clear();
 
+             // ★★★ 新增：高温报通知分组 (插入在这里比较合适) ★★★
+            var grpAlert = new LiteSettingsGroup(LanguageManager.T("Menu.AlertTemp"));
+            
+            // 高温报警开关
+            _chkAlertTemp = new LiteCheck(Config.AlertTempEnabled, LanguageManager.T("Menu.Enable"));
+            grpAlert.AddItem(new LiteSettingsItem(LanguageManager.T("Menu.AlertTemp"), _chkAlertTemp));
+
+            // 高温报警阈值
+            _inAlertTemp = new LiteUnderlineInput(Config.AlertTempThreshold.ToString("F0"), "°C", "", 80, UIColors.TextCrit, HorizontalAlignment.Center);
+            grpAlert.AddItem(new LiteSettingsItem(LanguageManager.T("Menu.AlertThreshold"), _inAlertTemp));
+
+            AddGroupToPage(grpAlert);
+
             // 1. 硬件负载
-            var grpHardware = new LiteSettingsGroup("Hardware Limits");
+            var grpHardware = new LiteSettingsGroup(LanguageManager.T("Menu.GeneralHardware"));
             
             // 文案放在前面了
-            _inCpuLoad = AddThresholdRow(grpHardware, "CPU / GPU Load", Config.Thresholds.Load, "%", "Warn", "Crit");
-            _inCpuTemp = AddThresholdRow(grpHardware, "Temperature", Config.Thresholds.Temp, "°C", "Warn", "Crit");
+            _inCpuLoad = AddThresholdRow(grpHardware, LanguageManager.T("Menu.HardwareLoad"), Config.Thresholds.Load, "%", LanguageManager.T("Menu.ValueWarnColor"), LanguageManager.T("Menu.ValueCritColor"));
+            _inCpuTemp = AddThresholdRow(grpHardware, LanguageManager.T("Menu.HardwareTemp"), Config.Thresholds.Temp, "°C", LanguageManager.T("Menu.ValueWarnColor"), LanguageManager.T("Menu.ValueCritColor"));
 
             AddGroupToPage(grpHardware);
 
             // 2. 网络与磁盘
-            var grpNet = new LiteSettingsGroup("Network & Disk");
+            var grpNet = new LiteSettingsGroup(LanguageManager.T("Menu.NetworkDiskSpeed"));
             
-            _inDisk = AddThresholdRow(grpNet, "Disk I/O", Config.Thresholds.DiskIOMB, "MB/s", "Warn", "Crit");
-            _inNetUp = AddThresholdRow(grpNet, "Upload Speed", Config.Thresholds.NetUpMB, "MB/s", "Warn", "Crit");
-            _inNetDown = AddThresholdRow(grpNet, "Download Speed", Config.Thresholds.NetDownMB, "MB/s", "Warn", "Crit");
+            _inDisk = AddThresholdRow(grpNet, LanguageManager.T("Menu.DiskIOSpeed"), Config.Thresholds.DiskIOMB, "MB/s", LanguageManager.T("Menu.ValueWarnColor"), LanguageManager.T("Menu.ValueCritColor"));
+            _inNetUp = AddThresholdRow(grpNet, LanguageManager.T("Menu.UploadSpeed"), Config.Thresholds.NetUpMB, "MB/s", LanguageManager.T("Menu.ValueWarnColor"), LanguageManager.T("Menu.ValueCritColor"));
+            _inNetDown = AddThresholdRow(grpNet, LanguageManager.T("Menu.DownloadSpeed"), Config.Thresholds.NetDownMB, "MB/s", LanguageManager.T("Menu.ValueWarnColor"), LanguageManager.T("Menu.ValueCritColor"));
 
             AddGroupToPage(grpNet);
 
             // 3. 流量限额
-            var grpData = new LiteSettingsGroup("Daily Data Cap");
-            grpData.AddFullItem(new LiteNote("Reset automatically at 00:00 every day.", 0));
+            var grpData = new LiteSettingsGroup(LanguageManager.T("Menu.DailyTraffic"));
 
-            _inDataUp = AddThresholdRow(grpData, "Daily Upload", Config.Thresholds.DataUpMB, "MB", "Warn", "Crit");
-            _inDataDown = AddThresholdRow(grpData, "Daily Download", Config.Thresholds.DataDownMB, "MB", "Warn", "Crit");
+            _inDataUp = AddThresholdRow(grpData, LanguageManager.T("Items.DATA.DayUp"), Config.Thresholds.DataUpMB, "MB", LanguageManager.T("Menu.ValueWarnColor"), LanguageManager.T("Menu.ValueCritColor"));
+            _inDataDown = AddThresholdRow(grpData, LanguageManager.T("Items.DATA.DayDown"), Config.Thresholds.DataDownMB, "MB", LanguageManager.T("Menu.ValueWarnColor"), LanguageManager.T("Menu.ValueCritColor"));
 
             AddGroupToPage(grpData);
+
+           
 
             _container.ResumeLayout();
             _isLoaded = true;
@@ -94,7 +111,6 @@ namespace LiteMonitor.src.UI.SettingsPage
             // 参数顺序已更新：text, unit, labelPrefix, width, color
             // 宽度设为 140 比较紧凑，如果文案长（如中文“严重警告”）可以设大一点
             var inputWarn = new LiteUnderlineInput(val.Warn.ToString(), unit, labelWarn, 140, UIColors.TextWarn, HorizontalAlignment.Center);
-            inputWarn.SetTextColor(UIColors.TextWarn);
 
             var arrow = new Label { 
                 Text = "➜", AutoSize = true, ForeColor = Color.LightGray, 
@@ -102,7 +118,6 @@ namespace LiteMonitor.src.UI.SettingsPage
             };
 
             var inputCrit = new LiteUnderlineInput(val.Crit.ToString(), unit, labelCrit, 140, UIColors.TextCrit, HorizontalAlignment.Center);
-            inputCrit.SetTextColor(UIColors.TextCrit);
 
             rightBox.Controls.Add(inputWarn);
             rightBox.Controls.Add(arrow);
@@ -134,10 +149,22 @@ namespace LiteMonitor.src.UI.SettingsPage
             _container.Controls.SetChildIndex(wrapper, 0);
         }
 
+        // ★★★ 修复点：将解析方法提取为类成员，避免局部函数的作用域问题 ★★★
+        private double Parse(LiteUnderlineInput input) 
+        {
+            // 简单防空保护
+            if (input == null || input.Inner == null) return 0;
+            return double.TryParse(input.Inner.Text, out double v) ? v : 0;
+        }
+
+        private int ParseInt(LiteUnderlineInput input)
+        {
+            if (input == null || input.Inner == null) return 0;
+            return int.TryParse(input.Inner.Text, out int v) ? v : 0;
+        }
         public override void Save()
         {
             if (!_isLoaded) return;
-            double Parse(LiteUnderlineInput input) => double.TryParse(input.Inner.Text, out double v) ? v : 0;
 
             Config.Thresholds.Load.Warn = Parse(_inCpuLoad.Warn);
             Config.Thresholds.Load.Crit = Parse(_inCpuLoad.Crit);
@@ -153,6 +180,9 @@ namespace LiteMonitor.src.UI.SettingsPage
             Config.Thresholds.DataUpMB.Crit = Parse(_inDataUp.Crit);
             Config.Thresholds.DataDownMB.Warn = Parse(_inDataDown.Warn);
             Config.Thresholds.DataDownMB.Crit = Parse(_inDataDown.Crit);
+            // ★★★ 保存告警设置 ★★★
+            Config.AlertTempEnabled = _chkAlertTemp.Checked;
+            Config.AlertTempThreshold = ParseInt(_inAlertTemp);
         }
     }
 }

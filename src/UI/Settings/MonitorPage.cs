@@ -37,11 +37,11 @@ namespace LiteMonitor.src.UI.SettingsPage
             header.Padding = new Padding(20, 0, 20, 0);
             
             // 使用 MonitorLayout 常量确保对齐
-            AddHeadLabel(header, "监控项 (ID)", MonitorLayout.X_ID);
-            AddHeadLabel(header, "名称 (Name)", MonitorLayout.X_NAME);
-            AddHeadLabel(header, "简称 (Short)", MonitorLayout.X_SHORT);
-            AddHeadLabel(header, "显示 / 隐藏 (Show / Hide)", MonitorLayout.X_PANEL); 
-            AddHeadLabel(header, "排序 (Sort)", MonitorLayout.X_SORT);
+            AddHeadLabel(header, LanguageManager.T("Menu.MonitorItem"), MonitorLayout.X_ID);
+            AddHeadLabel(header, LanguageManager.T("Menu.name"), MonitorLayout.X_NAME);
+            AddHeadLabel(header, LanguageManager.T("Menu.short"), MonitorLayout.X_SHORT);
+            AddHeadLabel(header, LanguageManager.T("Menu.showHide"), MonitorLayout.X_PANEL); 
+            AddHeadLabel(header, LanguageManager.T("Menu.sort"), MonitorLayout.X_SORT);
             
             this.Controls.Add(header);
             header.BringToFront();

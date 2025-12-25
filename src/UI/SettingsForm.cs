@@ -89,19 +89,26 @@ namespace LiteMonitor.src.UI
             _pages.Clear();
             //AddNav("General", "基础设置", new SettingsPageBase()); // 占位
             // 在 InitPages() 中
-            AddNav("General", LanguageManager.T("Menu.General"), new GeneralPage()); // 替换旧的 SettingsPageBase()
-            // 2. 外观设置 (新增)
-            AddNav("Appearance", LanguageManager.T("Menu.Appearance"), new AppearancePage());
+            
+            AddNav("MainPanel", LanguageManager.T("Menu.MainFormSettings"), new MainPanelPage());
+            // 5. 任务栏图标显示 (新增)
+            AddNav("Taskbar", LanguageManager.T("Menu.TaskbarSettings"), new TaskbarPage());
+
+             // 2. 外观设置 (新增)
+            //AddNav("Appearance", LanguageManager.T("Menu.Appearance"), new AppearancePage());
+
             // 3. 监控项显示 (新增)
-            AddNav("Monitor", LanguageManager.T("Menu.Monitor"), new MonitorPage());
+            AddNav("Monitor", LanguageManager.T("Menu.MonitorItemDisplay"), new MonitorPage());
             // 4. 告警阈值设置 (新增)   
             AddNav("Threshold", LanguageManager.T("Menu.Thresholds"), new ThresholdPage()); // ★ 新增这一行
+
+            AddNav("System", LanguageManager.T("Menu.SystemHardwar"), new SystemHardwarPage()); // 替换旧的 SettingsPageBase()
             
             
             // 强制刷新一次布局，防止按钮不可见
             _pnlNavContainer.PerformLayout();
             
-            SwitchPage("General");
+            SwitchPage("MainPanel");
         }
 
         private void AddNav(string key, string text, SettingsPageBase page)

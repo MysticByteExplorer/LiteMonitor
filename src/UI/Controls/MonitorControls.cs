@@ -59,7 +59,7 @@ namespace LiteMonitor.src.UI.Controls
             string valName = string.IsNullOrEmpty(item.UserLabel) ? defName : item.UserLabel;
             
             // 注意：这里复用了 LiteUnderlineInput，不用重复写绘制代码
-            _inputName = new LiteUnderlineInput(valName, "", "", 100) 
+            _inputName = new LiteUnderlineInput(valName, "", "", 100, UIColors.TextMain) 
             { Location = new Point(MonitorLayout.X_NAME, 8) };
 
             string defShortKey = "Short." + item.Key;
@@ -67,7 +67,7 @@ namespace LiteMonitor.src.UI.Controls
             if (defShort.StartsWith("Short.")) defShort = item.Key.Split('.')[1]; 
             string valShort = string.IsNullOrEmpty(item.TaskbarLabel) ? defShort : item.TaskbarLabel;
 
-            _inputShort = new LiteUnderlineInput(valShort, "", "", 60) 
+            _inputShort = new LiteUnderlineInput(valShort, "", "", 60, UIColors.TextMain) 
             { Location = new Point(MonitorLayout.X_SHORT, 8) };
 
             // C. Checks (复用 LiteCheck)

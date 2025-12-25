@@ -107,6 +107,22 @@ namespace LiteMonitor.src.UI.SettingsPage
         {
             var group = new LiteSettingsGroup(LanguageManager.T("Menu.HardwareSettings"));
 
+             // Max Limits
+            group.AddFullItem(new LiteNote("Max Limits (For Graph Scaling)", 0));
+
+            // ★ 适配新构造函数：text, unit, suffix="", width=80
+            _txtMaxCpuPower = new LiteUnderlineInput(Config.RecordedMaxCpuPower.ToString("F0"), "W", "", 80);
+            group.AddItem(new LiteSettingsItem("CPU Max Power", _txtMaxCpuPower));
+
+            _txtMaxCpuClock = new LiteUnderlineInput(Config.RecordedMaxCpuClock.ToString("F0"), "MHz", "", 80);
+            group.AddItem(new LiteSettingsItem("CPU Max Clock", _txtMaxCpuClock));
+
+            _txtMaxGpuPower = new LiteUnderlineInput(Config.RecordedMaxGpuPower.ToString("F0"), "W", "", 80);
+            group.AddItem(new LiteSettingsItem("GPU Max Power", _txtMaxGpuPower));
+
+            _txtMaxGpuClock = new LiteUnderlineInput(Config.RecordedMaxGpuClock.ToString("F0"), "MHz", "", 80);
+            group.AddItem(new LiteSettingsItem("GPU Max Clock", _txtMaxGpuClock));
+            
             _cmbDisk = new LiteComboBox();
             foreach (var d in HardwareMonitor.ListAllDisks()) _cmbDisk.Items.Add(d);
             SetComboVal(_cmbDisk, string.IsNullOrEmpty(Config.PreferredDisk) ? LanguageManager.T("Menu.Auto") : Config.PreferredDisk);
@@ -123,21 +139,7 @@ namespace LiteMonitor.src.UI.SettingsPage
             SetComboVal(_cmbRefresh, Config.RefreshMs + " ms");
             group.AddItem(new LiteSettingsItem(LanguageManager.T("Menu.Refresh"), _cmbRefresh));
 
-            // Max Limits
-            group.AddFullItem(new LiteNote("Max Limits (For Graph Scaling)", 0));
-
-            // ★ 适配新构造函数：text, unit, suffix="", width=80
-            _txtMaxCpuPower = new LiteUnderlineInput(Config.RecordedMaxCpuPower.ToString("F0"), "W", "", 80);
-            group.AddItem(new LiteSettingsItem("CPU Max Power", _txtMaxCpuPower));
-
-            _txtMaxCpuClock = new LiteUnderlineInput(Config.RecordedMaxCpuClock.ToString("F0"), "MHz", "", 80);
-            group.AddItem(new LiteSettingsItem("CPU Max Clock", _txtMaxCpuClock));
-
-            _txtMaxGpuPower = new LiteUnderlineInput(Config.RecordedMaxGpuPower.ToString("F0"), "W", "", 80);
-            group.AddItem(new LiteSettingsItem("GPU Max Power", _txtMaxGpuPower));
-
-            _txtMaxGpuClock = new LiteUnderlineInput(Config.RecordedMaxGpuClock.ToString("F0"), "MHz", "", 80);
-            group.AddItem(new LiteSettingsItem("GPU Max Clock", _txtMaxGpuClock));
+           
 
             AddGroupToPage(group);
         }

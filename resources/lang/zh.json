@@ -87,7 +87,7 @@
         "HardwareSettings": "硬件设置",
         "Appearance": "外观设置",
         "MainFormSettings": "主界面设置",
-        "CustomColors": "自定义颜色",
+        "CustomColors": "自定义字体颜色",
         "LabelColor": "标签颜色",
         "ValueSafeColor": "正常值颜色",
         "ValueWarnColor": "警告值颜色",

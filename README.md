@@ -5,7 +5,7 @@
 
 A lightweight and customizable desktop hardware monitoring tool — real-time monitoring of system performance such as CPU, GPU, memory, disk, and network.
 
-> 🟢 **立即下载最新版本：** [📦 GitHub Releases → LiteMonitor 最新版]([(https://github.com/MysticByteExplorer/LiteMonitor/releases)](https://github.com/MysticByteExplorer/LiteMonitor/releases/tag/v1.1.3))
+> 🟢 **立即下载最新版本：** [📦 GitHub Releases → LiteMonitor 最新版](https://github.com/MysticByteExplorer/LiteMonitor/releases)  
 
 *注意：由于涉及底层硬件读取，杀毒软件可能会误报 WinRing0 驱动，请添加信任或允许运行。*  
 *如不放心，代码是开源的，可自行查验。*

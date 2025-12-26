@@ -1,0 +1,1 @@
+D:\我的\代码\C#\FpsMonitor\LiteMonitor\LiteMonitor.Updater\bin\Release\net8.0-windows\win-x64\publish\Updater.exe

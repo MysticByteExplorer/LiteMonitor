@@ -1,0 +1,277 @@
+﻿using System;
+using System.Diagnostics;
+using System.Net.Http;
+using System.Reflection;
+using System.Text.Json;
+using System.Threading.Tasks;
+using System.Linq;
+using System.Windows.Forms;
+using LiteMonitor.src.Core;
+
+namespace LiteMonitor
+{
+    /// <summary>
+    /// LiteMonitor 自动更新模块（最终完整版）
+    /// - version.json 支持国内 / GitHub 两源自动 fallback
+    /// - ZIP 下载支持两源测速自动选择最快
+    /// - 完全健壮、无依赖外部逻辑
+    /// - CheckAsync() 可被右键菜单直接调用
+    /// </summary>
+    public static class UpdateChecker
+    {
+        // 全局 HttpClient（降低系统资源消耗）
+        private static readonly HttpClient http = new HttpClient
+        {
+            Timeout = TimeSpan.FromSeconds(6)
+        };
+
+        // ========================================================
+        // 【1】两个 version.json 源（自动 fallback）
+        // ========================================================
+        private static readonly string[] VersionJsonUrls =
+        {
+            // 国内源
+            "https://litemonitor.cn/update/version.json",
+
+            // GitHub RAW（自动 fallback 使用）
+             "https://raw.githubusercontent.com/Diorser/LiteMonitor/master/resources/version.json",
+        };
+
+        // ========================================================
+        // 【2】两个 ZIP 下载镜像（测速自动选择最快）
+        // ========================================================
+        private static readonly string[] Mirrors =
+        {
+            // Github Releases
+            "https://github.com/Diorser/LiteMonitor/releases/download/v{0}/LiteMonitor_v{0}-win-x64.zip",
+
+            // 国内 CDN
+            "https://litemonitor.cn/update/LiteMonitor_v{0}-win-x64.zip"
+        };
+
+
+        // ========================================================
+        // 【3】主入口：检查更新
+        // ========================================================
+        /// <summary>
+        /// 检查更新主入口。
+        /// showMessage = true 时，在无更新或失败时提示用户。
+        /// </summary>
+        public static async Task CheckAsync(bool showMessage = false)
+        {
+            try
+            {
+                // ---- 获取版本信息（自动 fallback）----
+                var info = await GetVersionInfo();
+                if (info == null)
+                {
+                    if (showMessage)
+                    {
+                        // 根据当前语言设置显示中文或英文版本
+                        if (LanguageManager.CurrentLang == "zh")
+                        {
+                            MessageBox.Show("无法连接到更新服务器，请稍后重试。",
+                                "检查更新", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Unable to connect to update server, please try again later.",
+                                "Update Check", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        }
+                    }
+                    return;
+                }
+
+                string latest = info.Value.latest;
+                string changelog = info.Value.changelog;
+                string releaseDate = info.Value.releaseDate;
+                string current = GetCurrentVersion();
+
+                if (new Version(latest) > new Version(current))
+                {
+                    // ---- 获取最快下载源 ----
+                    string fastest = await GetFastestZipUrl(latest);
+
+                    // ---- 加载设置并弹出更新窗口 ----
+                    var settings = Settings.Load();
+                    new UpdateDialog(latest, changelog, releaseDate, fastest, settings).ShowDialog();
+                }
+                else
+                {
+                    if (showMessage)
+                    {
+                        // 根据当前语言设置显示中文或英文版本
+                        if (LanguageManager.CurrentLang == "zh")
+                        {
+                            MessageBox.Show($"当前已是最新版本 ：v{current}\n发布日期：{releaseDate}", "检查更新", 
+                                MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        else
+                        {
+                            MessageBox.Show($"Already the latest version: v{current}\nRelease date: {releaseDate}", "Update Check", 
+                                MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("[UpdateChecker] Error: " + ex.Message);
+                if (showMessage)
+                {
+                    // 根据当前语言设置显示中文或英文版本
+                    if (LanguageManager.CurrentLang == "zh")
+                    {
+                        MessageBox.Show("检查更新失败，可能是网络问题。", 
+                            "检查更新失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Update check failed, possibly due to network issues.", 
+                            "Update Check Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                }
+            }
+        }
+
+
+        // ========================================================
+        // 【4】version.json 自动 fallback
+        // ========================================================
+       private static async Task<(string latest, string changelog, string releaseDate)?> GetVersionInfo()
+        {
+            foreach (var url in VersionJsonUrls)
+            {
+                try
+                {
+                    using var cts = new CancellationTokenSource();
+                    cts.CancelAfter(3000); // 最大等待 3 秒（连接+读取全部）
+
+                    // 构造真正带连接超时的 HttpRequest
+                    var request = new HttpRequestMessage(HttpMethod.Get, url);
+
+                    var task = http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
+
+                    // 这里我们用 WhenAny 避免 HttpClient 自身的内部卡顿
+                    var finished = await Task.WhenAny(task, Task.Delay(3000, cts.Token));
+
+                    if (finished != task)
+                        throw new TimeoutException("Connection timeout");
+
+                    var resp = await task;
+
+                    if (!resp.IsSuccessStatusCode)
+                        throw new Exception("Bad status");
+
+                    string json = await resp.Content.ReadAsStringAsync(cts.Token);
+
+                    var doc = JsonDocument.Parse(json);
+
+                    string latest = doc.RootElement.GetProperty("version").GetString()!;
+                    string log = doc.RootElement.GetProperty("changelog").GetString()!;
+                    string releaseDate = doc.RootElement.GetProperty("releaseDate").GetString()!;
+                    //string downloadUrl = doc.RootElement.GetProperty("downloadUrl").GetString()!;
+
+                    // ---- 成功，立即返回 ----
+                    return (latest, log, releaseDate);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[Update] 源失败：{url} -> {ex.Message}");
+                    continue; // 换下一个源
+                }
+            }
+
+            return null; // 两个源都失败
+        }
+
+
+
+        // ========================================================
+        // 【5】测速获取最快 ZIP 下载源
+        // ========================================================
+        private static async Task<string> GetFastestZipUrl(string version)
+        {
+            var tests = new Task<(string url, long speed)>[Mirrors.Length];
+
+            for (int i = 0; i < Mirrors.Length; i++)
+            {
+                string url = string.Format(Mirrors[i], version);
+                tests[i] = TestMirrorSpeed(url);
+            }
+
+            var results = await Task.WhenAll(tests);
+
+            // 速度降序排序
+            var fastest = results.OrderByDescending(r => r.speed).First();
+
+            if (fastest.speed > 0)
+                return fastest.url;
+
+            // 所有源失败 → 使用国内 CDN兜底
+            return string.Format(Mirrors[1], version);
+        }
+
+
+        // ========================================================
+        // 【6】轻量测速（读取 32KB 换算下载速度）
+        // ========================================================
+        private static async Task<(string url, long speed)> TestMirrorSpeed(string url)
+        {
+            try
+            {
+                var sw = Stopwatch.StartNew();
+
+                using var resp = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+                if (!resp.IsSuccessStatusCode)
+                    return (url, 0);
+
+                using var stream = await resp.Content.ReadAsStreamAsync();
+
+                byte[] testBuf = new byte[32 * 1024];
+                int read = await stream.ReadAsync(testBuf, 0, testBuf.Length);
+
+                sw.Stop();
+
+                if (read <= 0)
+                    return (url, 0);
+
+                // Bytes per second
+                long speed = (long)(read * 1000.0 / Math.Max(sw.ElapsedMilliseconds, 1));
+
+                return (url, speed);
+            }
+            catch
+            {
+                return (url, 0);
+            }
+        }
+
+
+        // ========================================================
+        // 【7】获取当前版本号
+        // ========================================================
+                // ========================================================
+        // 【7】获取当前版本号 (修复版)
+        // ========================================================
+        public static string GetCurrentVersion()
+        {
+            // 优先读取 AssemblyInformationalVersion (对应 csproj 中的 <Version>)
+            var version = Assembly.GetExecutingAssembly()
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+                .InformationalVersion;
+
+            // 如果读取失败，回退到 ProductVersion
+            if (string.IsNullOrWhiteSpace(version))
+                version = Application.ProductVersion;
+
+            // 这里的 version 可能会包含后缀 (如 1.0.7+abcdef)，需要截断
+            int plusIndex = version.IndexOf('+');
+            if (plusIndex > 0)
+                version = version.Substring(0, plusIndex);
+
+            return version;
+        }
+
+    }
+}

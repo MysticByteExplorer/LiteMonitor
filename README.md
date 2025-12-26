@@ -5,7 +5,7 @@
 
 A lightweight and customizable desktop hardware monitoring tool — real-time monitoring of system performance such as CPU, GPU, memory, disk, and network.
 
-> 🟢 **立即下载最新版本：** [📦 GitHub Releases → LiteMonitor 最新版](https://github.com/Diorser/LiteMonitor/releases/latest)    /  [⏬国内镜像网站下载](https://litemonitor.cn/)    
+> 🟢 **立即下载最新版本：** [📦 GitHub Releases → LiteMonitor 最新版]([(https://github.com/MysticByteExplorer/LiteMonitor/releases)](https://github.com/MysticByteExplorer/LiteMonitor/releases/tag/v1.1.3))
 
 *注意：由于涉及底层硬件读取，杀毒软件可能会误报 WinRing0 驱动，请添加信任或允许运行。*  
 *如不放心，代码是开源的，可自行查验。*
@@ -72,7 +72,7 @@ LiteMonitor 是一款基于 **Windows** 的现代化桌面系统监控工具。
 
 ## 📦 安装与使用
 
-1. 前往 [Releases 页面](https://github.com/Diorser/LiteMonitor/releases) 下载最新版压缩包  
+1. 前往 [Releases 页面](https://github.com/MysticByteExplorer/LiteMonitor/releases) 下载最新版压缩包  
 2. 解压后运行 `LiteMonitor.exe`  
 3. 程序会自动根据系统语言加载对应语言文件
 
@@ -172,5 +172,7 @@ dotnet build -c Release
 ---
 
 ## 📬 联系方式
-**作者**：Diorser  
-**项目主页**：[https://github.com/Diorser/LiteMonitor](https://github.com/Diorser/LiteMonitor)
+**原作者**：Diorser  
+**项目主页**：[https://github.com/MysticByteExplorer/LiteMonitor]
+**修改作者**：MysticByteExplorer
+
